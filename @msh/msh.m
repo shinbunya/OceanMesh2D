@@ -777,7 +777,7 @@ classdef msh
         end
 
         % renumber mesh min. bw
-        function obj=renum(obj)
+        function [obj,varargout]=renum(obj)
 
             np=length(obj.p); nt=length(obj.t);
             % Calculate adjacency matrix of t
@@ -884,6 +884,8 @@ classdef msh
                 idx = perm_inv(obj.f5354.nodes);
                 obj.f5354.nodes = idx;
             end
+
+            varargout{1} = perm_inv;
         end
 
         % interp bathy/slope

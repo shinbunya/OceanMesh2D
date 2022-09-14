@@ -34,7 +34,7 @@ fprintf(fid, '%d %d \n', NE, NP ) ;
 % Improve write efficiency
 % Vertices
 IND = unique(EToV(:));
-pval = [ IND VX B] ;
+pval = [ double(IND) VX B] ;
 fprintf( fid, '%10d %16.10f %16.10f %18.10e \n', pval' ) ;
 
 
@@ -96,7 +96,7 @@ if ~isempty(boudat)
                              barinht(ll), barincfsp(ll) ) ;
                     %
                 end
-            case  {4, 24}
+            case  {4, 24, 64}
                 % disp('4 24')
                 % val = fscanf(fid,'%g %g %g %g %g \n', [5 nvell(i)] )  ;
                 idx = find( boudat.nbvv(:,i) ) ;

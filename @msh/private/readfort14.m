@@ -108,7 +108,7 @@ if read_bou
                 disp('3 13 23')
                 val = fscanf(fid,'%g %g %g \n', [3 nvell(i)] )  ;
                 nbvv(1:nvell(i),i) = val(1,:) ;
-            case  {4, 24}
+            case  {4, 24, 64}
                 %disp('4 24')
                 val = fscanf(fid,'%g %g %g %g %g \n', [5 nvell(i)] )  ;
                 nbvv(1:nvell(i),i) = val(1,:) ;
@@ -136,7 +136,7 @@ if read_bou
     boudat.ibtype = ibtype ;
     boudat.nbvv = nbvv(1:max(nvell),:);
     
-    if ( sum(ibtype == 24) > 0 ||  sum(ibtype == 4) > 0 )
+    if ( sum(ibtype == 24) > 0 ||  sum(ibtype == 4) > 0  ||  sum(ibtype == 64) > 0 )
         boudat.ibconn = ibconn(1:max(nvell),:);
         boudat.barinht = barinht(1:max(nvell),:);
         boudat.barincfsb = barincfsb(1:max(nvell),:);

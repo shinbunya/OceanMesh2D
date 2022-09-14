@@ -312,9 +312,9 @@ if ( f15dat.im == 10 )
     f15dat.outgc = readlinevec( fid ) ; 
 end
 
-% NOUTGW
+% NOUTGM
 if ( f15dat.nws ~= 0 ) 
-    f15dat.outgw = readlinevec( fid ) ;
+    f15dat.outgm = readlinevec( fid ) ;
 end
 
 

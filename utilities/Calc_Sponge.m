@@ -10,15 +10,27 @@ function obj = Calc_Sponge(obj,W,generator,varargin)
 %     wavelength to set as sponge width W.
 %
 % generator - sponge layer type:
-%   = 1 -> generating-absorbing with tidal solutions (need fort.53001/54001)
-%   = 0 -> fully absorbing sponge 
-%   = -1 -> generating-absorbing with arbitrary solutions (need fort.2001)
+%   = 3 -> generating-absorbing with tidal solutions, meteorological forcing ramped in space (need fort.53001/54001)
+%   = 1 -> generating-absorbing with tidal solutions, no meteorological forcing (need fort.53001/54001)
+%   = 0 -> fully absorbing sponge, no meteorological forcing 
+%   = -1 -> generating-absorbing with arbitrary solutions, no meteorological forcing (need fort.2001)
 %
 % Default for other optional name-value pair varargins are:
 % F = 20, dis_ratio = 0.5 and spngtype = 'poly', 
-% i.e. that a polynomial (2nd order) type function on sigma will be used so 
-% that half of the way into the sponge (dis_ratio) the signal will be 
-% attenuated 20 fold (F)
+%   i.e. that a polynomial (2nd order) type function on sigma will be used so 
+%   that half of the way into the sponge (dis_ratio) the signal will be 
+%   attenuated 20 fold (F)
+% metramp_alpha = 1.0
+%   i.e. Meteorological forcing spatial ramping parameter "metramp_alpha"
+%   is set to 1.0, which means meteorological forcing is forced to be zero
+%   along the open boundary. If alpha = 0.0, original meteorological
+%   forcing is applied all the way to the open boundary.
+%     metramp_i = 1 - metramp_alpha*sigma_i/max(sigma)
+%
+%--------------------------------------------------------------------------
+% Modified by S.Bunya 9/13/2021
+%   - Implemented sponge layer type = 3
+%--------------------------------------------------------------------------
 
 if isempty(obj.b)
    error('This function requires bathymetry on the msh object (use interp)') 
@@ -29,9 +41,10 @@ end
 g         = 9.81;  % gravity
 F         = 20;    % 20 fold decrease at dis_ratio
 dis_ratio = 0.5;   % ratio of sponge width where F decrease occurs
-spngtype  = 'poly'; alpha = 2; % second order polynomial type function 
+spngtype  = 'poly'; alpha = 2; % second order polynomial type function
+metramp_alpha     = 1.0;   % meteolorogical forcing ramping control parameter
 if ~isempty(varargin)
-    names = {'F','dis_ratio','spngtype'};
+    names = {'F','dis_ratio','spngtype','metramp_alpha'};
     for ii = 1:length(names)
         ind = find(~cellfun(@isempty,strfind(varargin(1:2:end),names{ii})));
         if ~isempty(ind)
@@ -41,6 +54,8 @@ if ~isempty(varargin)
                 dis_ratio = varargin{ind*2};
             elseif ii == 3
                 spngtype = varargin{ind*2};
+            elseif ii == 4
+                metramp_alpha = varargin{ind*2};
             end
         end    
     end
@@ -89,6 +104,10 @@ if length(unique_nodes) < length(idspg_node)
     idspg_node = unique_nodes;
     sigma = sigma_unique;
 end
+
+% Calculate metorolocigal forcing ramping coefficient sb
+nidspg_node = length(idspg_node);
+met_ramp = ones(nidspg_node,1) - metramp_alpha * sigma./max(sigma);
   
 %% Set f13 structure in the msh object class
 if isempty(obj.f13)
@@ -117,14 +136,25 @@ attrname = 'sponge_generator_layer' ;
 % User-defined input
 obj.f13.userval.Atr(natb).AttrName = attrname ; 
 obj.f13.userval.Atr(natb).usernumnodes = length(idspg_node) ;
-obj.f13.userval.Atr(natb).Val = [ idspg_node'; sigma'; ...
-                                  (sigma*0 + generator)' ] ;                          
-%                   
+if generator ~= 3
+    obj.f13.userval.Atr(natb).Val = [ idspg_node'; sigma'; ...
+                                      (sigma*0 + generator)' ] ;
+else
+    obj.f13.userval.Atr(natb).Val = [ idspg_node'; sigma'; ...
+                                      (sigma*0 + generator)'; ...
+                                      met_ramp' ] ;
+end
+%
 % Default input
 obj.f13.defval.Atr(natb).AttrName =  attrname ; 
 obj.f13.defval.Atr(natb).Unit = 'unitless' ;
-obj.f13.defval.Atr(natb).ValuesPerNode = 2 ;
-obj.f13.defval.Atr(natb).Val = [0.0 0] ;
+if generator ~= 3
+    obj.f13.defval.Atr(natb).ValuesPerNode = 2 ;
+    obj.f13.defval.Atr(natb).Val = [0.0 0] ;
+else
+    obj.f13.defval.Atr(natb).ValuesPerNode = 3 ;
+    obj.f13.defval.Atr(natb).Val = [0.0 0 1.0] ;
+end
 
 if ~isempty(obj.f15)
     % Change attribute in obj.f15

@@ -213,9 +213,9 @@ function [amp_u, phs_u, amp_v, phs_v] = interp_u(fname,k,Lx,Ly,Iu,Iv,...
     try 
        Re = 'URe'; Im = 'UIm';
        % For real part
-       Re_now = ncread(fname,Re,[1 1 k],[Lx 1]);
+       Re_now = double(ncread(fname,Re,[1 1 k],[Lx 1]));
        % For imaginary part
-       Im_now = ncread(fname,Im,[1 1 k],[Lx 1]);
+       Im_now = double(ncread(fname,Im,[1 1 k],[Lx 1]));
     catch
        Re = 'uRe'; Im = 'uIm';
        % For real part - convert from cm^2/s to m^2/s
@@ -251,9 +251,9 @@ function [amp_u, phs_u, amp_v, phs_v] = interp_u(fname,k,Lx,Ly,Iu,Iv,...
     try 
        Re = 'VRe'; Im = 'VIm';
        % For real part
-       Re_now = ncread(fname,Re,[1 1 k],[Ly 1]);
+       Re_now = double(ncread(fname,Re,[1 1 k],[Ly 1]));
        % For imaginary part
-       Im_now = ncread(fname,Im,[1 1 k],[Ly 1]);
+       Im_now = double(ncread(fname,Im,[1 1 k],[Ly 1]));
     catch
        Re = 'vRe'; Im = 'vIm';
        % For real part - convert from cm^2/s to m^2/s

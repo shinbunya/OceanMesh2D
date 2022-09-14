@@ -7,6 +7,15 @@ function obj = Calc_tau0(obj,varargin)
 %            2) Optional name-value arguments:
 %             - 'opt': -3 [default] => calculates spatially varying tau0
 %                                      factors
+%                     -21 => calculates spatially varying tau0 factors
+%                            based on depth h and distance L and chose a
+%                            smaller one (7/16/2021 SB)
+%                     -22 => calculates spatially varying tau0 factors
+%                            based on depth h and distance L by a function
+%                            of h*L (7/16/2021 SB)
+%                     -221=> calculates spatially varying tau0 factors
+%                            based on depth h and distance L by a function
+%                            of h*L with different cutoffs (7/16/2021 SB)
 %                     +ve => calculates the stable positive tau0 based on 
 %                            the value of 'opt', which is the intended 
 %                            simulation timestep
@@ -52,6 +61,7 @@ if ~isempty(varargin)
             elseif ii == 2
                 Distance = varargin{ind*2};
             elseif ii == 3
+                disp(['ind = ' num2str(ind)]);
                 opt = varargin{ind*2};
             elseif ii == 4
                 kappa = varargin{ind*2};
@@ -102,11 +112,51 @@ for ii = 1:length(obj.b)
     ns = ne + 1;
 end
 
-%% Calculate tau0 based on conditions
-default_val = 0.03;
-tau0 = default_val*ones(size(obj.b));
-tau0(Md > Distance & obj.b <= MinDepth) = 0.02;
-tau0(Md > Distance & obj.b > MinDepth) = 0.005;
+%% Calculate tau0 based on conditions according to 'opt'
+if opt == -3
+    default_val = 0.03;
+    tau0 = default_val*ones(size(obj.b));
+    tau0(Md > Distance & obj.b <= MinDepth) = 0.02;
+    tau0(Md > Distance & obj.b > MinDepth) = 0.005;
+elseif opt == -21
+    default_val = 0.005;
+    
+    tau0_h = default_val*ones(size(obj.b));
+    tau0_h(obj.b <= 3.0) = 0.1/3.0;
+    idx = find(obj.b > 3.0 & obj.b < 20.0); tau0_h(idx) = 0.1./obj.b(idx);
+    
+    tau0_L = default_val*ones(size(obj.b));
+    tau0_L(Md <= 150.0/1000.0) = 0.1/3.0; % 1000.0 --> Unit change (km <-> m)
+    idx = (Md > 150.0/1000.0 & Md <= 1000.0/1000.0); tau0_L(idx) = 5.0/1000.0./Md(idx);
+
+    tau0 = min([tau0_h tau0_L],[],2);
+elseif opt == -22
+    default_val = 0.005;
+    hL = obj.b.*Md*1000.0; % 1000.0 --> Unit change (km -> m)
+    hL(hL > 20000.0) = 20000.0;
+    hL(hL < 450) = 450;
+    tau0 = sqrt(0.5./hL);
+elseif opt == -221
+    default_val = 0.005;
+    hL = obj.b.*Md*1000.0; % 1000.0 --> Unit change (km -> m)
+    hL(hL > 20000.0) = 20000.0;
+    hL(hL < 50) = 50;
+    tau0 = sqrt(0.5./hL);
+elseif opt == -222
+    default_val = 0.002;
+    hL = obj.b.*Md*1000.0; % 1000.0 --> Unit change (km -> m)
+    hL(hL > 125000.0) = 125000.0;
+    hL(hL < 50) = 50;
+    tau0 = sqrt(0.5./hL);
+elseif opt == -223
+    default_val = 0.01;
+    hL = obj.b.*Md*1000.0; % 1000.0 --> Unit change (km -> m)
+    hL(hL > 5000.0) = 5000.0;
+    hL(hL < 50) = 50;
+    tau0 = sqrt(0.5./hL);
+else
+    error('Invalid opt value.')
+end
 
 %% Make into f13 struct
 if isempty(obj.f13)
@@ -141,10 +191,10 @@ obj.f13.defval.Atr(NA).Val = default_val ;
 
 % User Values
 obj.f13.userval.Atr(NA).AttrName = attrname ;
-numnodes = length(find(tau0 < default_val));
+numnodes = length(find(tau0 ~= default_val));
 obj.f13.userval.Atr(NA).usernumnodes = numnodes ;
 % Print out list of nodes for each
-K = find(tau0 < default_val);
+K = find(tau0 ~= default_val);
 obj.f13.userval.Atr(NA).Val = [K tau0(K)]';
 
 if ~isempty(obj.f15)
