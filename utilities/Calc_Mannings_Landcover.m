@@ -33,7 +33,7 @@ if strcmp(type,'nlcd')
 elseif strcmp(type,'ccap')
     disp('Info: Using CCAP table')
     % CCAP table
-    load ccap 
+    load ccap_Dietrich2011
     ccap_mannings(end+1)=ccap_mannings(21); % <-- make NaN = default value
     varargin{end+1}='lut';
     varargin{end+1}=ccap_mannings;

@@ -33,8 +33,13 @@ for i = 1: nAttr
     
     % val = fscanf( fid, '%g ', valpernode ) ; 
     
-    fprintf( fid, '%15.9e ', fort13dat.defval.Atr(i).Val ) ;
-    fprintf( fid, '\n' ) ; 
+    if strcmp(fort13dat.defval.Atr(i).AttrName,"condensed_nodes")
+        fprintf( fid, '%d ', fort13dat.defval.Atr(i).Val ) ;
+        fprintf( fid, '\n' ) ; 
+    else
+        fprintf( fid, '%15.9e ', fort13dat.defval.Atr(i).Val ) ;
+        fprintf( fid, '\n' ) ; 
+    end
 end
 
 % Get user-defined value
@@ -54,8 +59,13 @@ for i = 1: nAttr
         
         % Get a proper format
         str = '%d' ;
+        if strcmp(fort13dat.defval.Atr(i).AttrName,"condensed_nodes")
+            strnum = ' %d';
+        else
+            strnum = ' %15.9e';
+        end
         for ll = 1: valpernode - 1
-            str = [str ' %15.9e'] ;
+            str = [str strnum] ;
         end
         str = [str '\n' ] ;
         

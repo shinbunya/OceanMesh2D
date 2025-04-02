@@ -53,7 +53,7 @@ for i = 1: nAttr
 % for i = 1: 1
     attr = fgetl(fid) ;
     fort13dat.userval.Atr(i).AttrName = strtrim(attr) ;
-    
+    disp(fort13dat.userval.Atr(i).AttrName)
     numnodes = fscanf(fid, '%d \n', 1 ) ; 
     fort13dat.userval.Atr(i).usernumnodes = numnodes ;
     
